@@ -1,39 +1,46 @@
 # setup.ps1
 Write-Host "`nStarting Splunk MITRE Lab Setup..." -ForegroundColor Cyan
 
-# Define paths
-$ufPath = "C:\Program Files\SplunkUniversalForwarder"
-$localConfPath = "$ufPath\etc\system\local"
-$repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$lookupSrc = Join-Path $repoRoot "mitre_lookup\mitre_lookup.csv"
-$inputsSrc = Join-Path $repoRoot "configs\inputs.conf"
+# Function to locate splunk.exe
+function Find-SplunkUF {
+    Write-Host "Searching for splunk.exe..." -NoNewline
+    $paths = Get-ChildItem -Path "$env:SystemDrive\" -Recurse -Filter "splunk.exe" -ErrorAction SilentlyContinue -Force |
+        Where-Object { $_.FullName -like "*UniversalForwarder*" -and $_.FullName -notlike "*bin\python*" }
 
-# Check if Splunk UF is installed
-if (-Not (Test-Path $ufPath)) {
-    Write-Error "Splunk Universal Forwarder is not installed at $ufPath"
-    exit 1
+    if ($paths.Count -eq 0) {
+        Write-Error "`nCould not find a Splunk Universal Forwarder installation on this machine."
+        exit 1
+    }
+
+    # Use first match
+    return Split-Path -Parent $paths[0].FullName
 }
+
+# Locate UF
+$binPath = Find-SplunkUF
+$ufRoot = Split-Path -Parent $binPath
+$localConfPath = "$ufRoot\etc\system\local"
+
+# Paths from repo
+$repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$inputsSrc = Join-Path $repoRoot "configs\inputs.conf"
+$lookupSrc = Join-Path $repoRoot "mitre_lookup\mitre_lookup.csv"
 
 # Copy inputs.conf
 if (Test-Path $inputsSrc) {
     Copy-Item $inputsSrc -Destination $localConfPath -Force
-    Write-Host "✓ Copied inputs.conf to $localConfPath"
+    Write-Host "`n✓ Copied inputs.conf to $localConfPath"
 } else {
     Write-Warning "inputs.conf not found in $inputsSrc"
 }
 
-# Restart Splunk UF
-$binPath = "$ufPath\bin"
-if (Test-Path "$binPath\splunk.exe") {
-    Write-Host "Restarting Splunk Universal Forwarder..."
-    & "$binPath\splunk.exe" restart
-} else {
-    Write-Warning "Could not find splunk.exe at $binPath"
-}
+# Restart the forwarder
+Write-Host "`nRestarting Splunk Universal Forwarder..."
+& "$binPath\splunk.exe" restart
 
-# Reminder to upload lookup manually
+# Manual lookup reminder
 Write-Host "`nReminder:" -ForegroundColor Yellow
-Write-Host "→ You still need to upload 'mitre_lookup.csv' in Splunk Web:"
+Write-Host "→ You still need to upload 'mitre_lookup.csv' via Splunk Web:"
 Write-Host "  Settings → Lookups → Lookup table files → Add new"
 Write-Host "  Then define it under Lookup Definitions as 'mitre_lookup'"
 Write-Host "`nSetup complete." -ForegroundColor Green
