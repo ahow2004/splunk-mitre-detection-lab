@@ -1,0 +1,20 @@
+<dashboard version="1.1">
+  <label>MITRE ATT&amp;CK SOC View</label>
+  <row>
+    <panel>
+      <title>Mapped MITRE Techniques by Tactic</title>
+      <chart>
+        <search>
+          <query>
+index=windows_security OR index=windows_system OR index=windows_app
+| lookup mitre_lookup signature AS EventCode OUTPUT technique_id, technique_name, tactic
+| stats count by tactic, technique_name
+| sort tactic
+          </query>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>
