@@ -45,7 +45,7 @@ During setup:
 ### 3. Clone This Repository
 
 ```powershell
-git clone https://github.com/YOUR_USERNAME/splunk-mitre-detection-lab.git
+git clone https://github.com/ahow2004/splunk-mitre-detection-lab.git
 cd splunk-mitre-detection-lab
 ```
 
