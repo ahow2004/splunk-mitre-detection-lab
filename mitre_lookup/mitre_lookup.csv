@@ -1,0 +1,5 @@
+signature,technique_id,technique_name,tactic
+4625,T1110,Brute Force,Credential Access
+4624,T1078,Valid Accounts,Initial Access
+4672,T1548,Privilege Escalation,Privilege Escalation
+4688,T1059,Command Scripting,Execution
